@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
+import { generateEllipticalGalaxy, generateSpiralGalaxy } from './galaxy.js';
+
 /* Global variables */
 let renderer, controls, scene, camera;
 const clock = new THREE.Clock();
@@ -15,8 +17,11 @@ const SPHERE_PARAMS = {
 /* Particle Parameters */
 const PARTICLE_PARAMS = {
     particleSpeed: 0.1,
-    color: '#ff0055',
+    color: '#ffffff',
     particleSize: 0.005,
+    count: 100000,
+    branches: 3,
+    radius: 5,
 }
 
 /* Three.js code */
@@ -24,7 +29,7 @@ scene = new THREE.Scene();
 
 /* Camera setup */
 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
-camera.position.set(0, 0, 5);
+camera.position.set(0, 3, 6);
 
 /* Create renderer and set up the canvas */
 renderer = new THREE.WebGLRenderer({antialias: true});
@@ -34,15 +39,8 @@ document.body.appendChild(renderer.domElement);
 /* Objects */
 const sphereGeometry = new THREE.SphereGeometry(1, 64, 64);
 
-const particlesGeometry = new THREE.BufferGeometry;
-const particlesCount = 10000;
-
-const positionArray = new Float32Array(particlesCount * 3);
-
-for (let i = 0; i < particlesCount * 3; i++) {
-    positionArray[i] = (Math.random() - 0.5) * 10;
-}
-particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
+// const particles = generateSpiralGalaxy(PARTICLE_PARAMS);
+const particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
 
 /* Materials */
 const sphereMaterial = new THREE.PointsMaterial({
@@ -50,16 +48,11 @@ const sphereMaterial = new THREE.PointsMaterial({
     color: SPHERE_PARAMS.color,
 });
 
-const particlesMaterial = new THREE.PointsMaterial({
-    size: PARTICLE_PARAMS.particleSize,
-    color: PARTICLE_PARAMS.color,
-});
-
 /* Meshes */
 const sphere = new THREE.Points(sphereGeometry, sphereMaterial);
+const particleMesh = new THREE.Points(particles[0], particles[1]);
+scene.add(sphere, particleMesh);
 
-const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-scene.add(sphere, particlesMesh);
 
 /* Interaction */
 controls = new OrbitControls( camera, renderer.domElement );
@@ -71,6 +64,7 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+
 /* Call animation/rendering loop */
 animate();
 
@@ -79,7 +73,7 @@ function animate() {
 
     /* Update Objects */
     sphere.rotation.y = SPHERE_PARAMS.rotationSpeed * elapsedTime;
-    particlesMesh.rotation.y = PARTICLE_PARAMS.particleSpeed * elapsedTime;
+    particleMesh.rotation.y = PARTICLE_PARAMS.particleSpeed * elapsedTime;
 
     requestAnimationFrame(animate);
 
@@ -128,13 +122,13 @@ particleFolder.addInput(PARTICLE_PARAMS, 'particleSpeed', {min: -3, max: 3, step
 /* Update particle color upon user change */
 particleFolder.addInput(PARTICLE_PARAMS, 'color').on('change', (event) => {
     PARTICLE_PARAMS.color = event.value;
-    particlesMaterial.color = new THREE.Color(event.value);
-    particlesMaterial.needsUpdate = true;
+    particles[1].color = new THREE.Color(event.value);
+    particles[1].needsUpdate = true;
 });
 
 /* Update non-sphere particle size upon user request */
 particleFolder.addInput(PARTICLE_PARAMS, 'particleSize', {min: 0.001, max: 0.05, step: 0.001}).on('change', (event) => {
    PARTICLE_PARAMS.particleSize = event.value;
-   particlesMaterial.size = event.value;
-   particlesMaterial.needsUpdate = true;
+   particles[1].size = event.value;
+   particles[1].needsUpdate = true;
 });
