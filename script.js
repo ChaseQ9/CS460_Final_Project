@@ -2,10 +2,15 @@ import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 import { generateEllipticalGalaxy, generateSpiralGalaxy } from './galaxy.js';
+import { drawImage } from './image.js';
 
 /* Global variables */
-let renderer, controls, scene, camera;
+let renderer, controls, scene, camera, mouseX, mouseY;
 const clock = new THREE.Clock();
+
+
+var lines = await drawImage();
+console.log(lines);
 
 /* Sphere Parameters */
 const SPHERE_PARAMS = {
@@ -39,8 +44,8 @@ document.body.appendChild(renderer.domElement);
 /* Objects */
 const sphereGeometry = new THREE.SphereGeometry(1, 64, 64);
 
-// const particles = generateSpiralGalaxy(PARTICLE_PARAMS);
-const particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
+const particles = generateSpiralGalaxy(PARTICLE_PARAMS);
+// const particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
 
 /* Materials */
 const sphereMaterial = new THREE.PointsMaterial({
@@ -63,6 +68,33 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+window.addEventListener('mousemove', (ev) => {
+    mouseX = ev.x;
+    mouseY = ev.y;
+
+    var vp_coords = new THREE.Vector2( 
+        ( mouseX / window.innerWidth ) * 2 - 1,  
+        -( mouseY / window.innerHeight ) * 2 + 1);
+
+    mouseX = vp_coords.x;
+    mouseY = vp_coords.y;    
+    // normalized mouse coordinates 
+})
+
+// ************************
+// Could be uncommented but for now keep it commented because it does not work well
+//
+// window.onkeydown = (ev) => {
+//     if (ev.code == 'Space') {
+//         console.log(mouseX, mouseY);
+//         // not working correctly
+//         const parts = generateEllipticalGalaxy(PARTICLE_PARAMS, mouseX, mouseY);
+//         const pMesh = new THREE.Points(parts[0], parts[1]);
+//         scene.add(pMesh);
+        
+//     }
+// }
 
 
 /* Call animation/rendering loop */
