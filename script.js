@@ -8,10 +8,6 @@ import { drawImage } from './image.js';
 let renderer, controls, scene, camera, mouseX, mouseY;
 const clock = new THREE.Clock();
 
-
-var lines = await drawImage();
-console.log(lines);
-
 /* Sphere Parameters */
 const SPHERE_PARAMS = {
     rotationSpeed: 0.5,
@@ -24,28 +20,32 @@ const PARTICLE_PARAMS = {
     particleSpeed: 0.1,
     color: '#ffffff',
     particleSize: 0.005,
-    count: 100000,
+    count: 1000000,
     branches: 3,
     radius: 5,
 }
 
 /* Three.js code */
 scene = new THREE.Scene();
-
 /* Camera setup */
 camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
 camera.position.set(0, 3, 6);
 
 /* Create renderer and set up the canvas */
 renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setClearColor(0x9a52a3, .15);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 /* Objects */
 const sphereGeometry = new THREE.SphereGeometry(1, 64, 64);
 
-const particles = generateSpiralGalaxy(PARTICLE_PARAMS);
-// const particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
+// const particles = generateSpiralGalaxy(PARTICLE_PARAMS);
+const particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
+
+// experimental 
+const lines =  await drawImage();
+console.log(particles);
 
 /* Materials */
 const sphereMaterial = new THREE.PointsMaterial({
@@ -69,33 +69,16 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-window.addEventListener('mousemove', (ev) => {
-    mouseX = ev.x;
-    mouseY = ev.y;
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const mouse3D = new THREE.Vector3();
 
-    var vp_coords = new THREE.Vector2( 
-        ( mouseX / window.innerWidth ) * 2 - 1,  
-        -( mouseY / window.innerHeight ) * 2 + 1);
+const onMouseMove = (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = (event.clientY / window.innerHeight) * 2 + 1;
+}
 
-    mouseX = vp_coords.x;
-    mouseY = vp_coords.y;    
-    // normalized mouse coordinates 
-})
-
-// ************************
-// Could be uncommented but for now keep it commented because it does not work well
-//
-// window.onkeydown = (ev) => {
-//     if (ev.code == 'Space') {
-//         console.log(mouseX, mouseY);
-//         // not working correctly
-//         const parts = generateEllipticalGalaxy(PARTICLE_PARAMS, mouseX, mouseY);
-//         const pMesh = new THREE.Points(parts[0], parts[1]);
-//         scene.add(pMesh);
-        
-//     }
-// }
-
+window.addEventListener('mousemove', onMouseMove, false);
 
 /* Call animation/rendering loop */
 animate();
@@ -111,7 +94,44 @@ function animate() {
 
     controls.update();
     renderer.render(scene, camera);
+
+
+    // check for intersection
+    updateParticles();
 }
+
+// This function was generated with the help of chatgpt to do the calculations of moving the particles 
+// with modifications to make it work for our purpose 
+function updateParticles() {
+    const posArray = particles[0].attributes.position.array;
+
+    // Convert mouse to world coordinates
+    raycaster.setFromCamera(mouse, camera);
+    const plane = new THREE.Plane( new THREE.Vector3(0, 0, 0), 0);
+    raycaster.ray.intersectPlane(plane, mouse3D);
+    var scaleEffect = 0.4
+    var threshold = 10;
+    for (let i = 0; i < posArray.length; i += 3) {
+        const dx = posArray[i] - mouse3D.x;
+        const dy = posArray[i + 1] - mouse3D.y;
+        const dz = posArray[i + 2] - mouse3D.z;
+
+        const distanceSquared = dx * dx + dy * dy + dz * dz;
+
+        if (distanceSquared < threshold ) {
+            const distance = Math.sqrt(distanceSquared);
+            const scale = (threshold - distance) / threshold; 
+            posArray[i] += dx * scale * scale * Math.random();
+            posArray[i + 1] += dy * scale * scaleEffect * Math.random();
+            posArray[i + 2] += dz * scale * scaleEffect * Math.random();
+        }
+    }
+
+    particles[0].attributes.position.needsUpdate = true; 
+}
+
+
+
 
 /* TweakPane Implementation */
 const pane = new Tweakpane.Pane();

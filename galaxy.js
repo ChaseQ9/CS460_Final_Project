@@ -68,19 +68,20 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
     // usually they are filled in though i need to figure out how to do that
     const radius = particleInfo.radius * 2;
     const posArray = new Float32Array(count * 3);
-    const randomFactor = 0.1;
+    // Much of the math for this one was just guess and check to see if it looks cool
     for (let i = 0; i < count; i++) {
-        const angle = (2 * Math.PI * i ) / count;
+        const r = Math.sqrt(Math.random());
+        const angle = ( Math.PI * 2 * Math.random());
 
         let i3 = i * 3;
         
-        const randomX = centerX + (Math.random() - 0.5) * randomFactor * radius;
-        const randomY = (Math.random() - 0.5) * randomFactor * radius;
-        const randomZ = centerZ + (Math.random() - 0.5) * randomFactor * radius/2;
+        const randomX = r * Math.cos(angle) * radius;
+        const randomY = r * (Math.random() - 0.5) * radius * 0.2;
+        const randomZ = Math.sin(angle) * radius/2;
 
-        posArray[i3] = Math.cos(angle) * radius / 5 + randomX;
+        posArray[i3] = randomX + centerX;
         posArray[i3 + 1] = randomY;
-        posArray[i3 + 2] = Math.sin(angle) * radius/3 + randomZ ;
+        posArray[i3 + 2] = randomZ + centerZ;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));

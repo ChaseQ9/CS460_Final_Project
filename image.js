@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 
 // this function reads in the image coordinates that were calculated by the python file 
 async function getImage(){

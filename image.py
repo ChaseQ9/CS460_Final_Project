@@ -29,12 +29,18 @@ file = open("imgcoords.txt", "w")
 file.write("")
 file.close()
 
+file = open("imgcolors.txt", "w")
+file.write("")
+file.close()
+
 file = open("imgcoords.txt", "a")
 file.write("\n".join(map(str, list(x_inds))))
 file.write("\n")
 file.write("\n".join(map(str, list(y_inds))))
 file.write("\n")
+file.close()
 
+file = open("imgcolors.txt", "a")
 for pix in pixel_vals:
     file.write(str(pix))
     file.write("\n")
