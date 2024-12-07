@@ -49,12 +49,12 @@ export const generateSpiralGalaxy = (particleInfo, centerX=0, centerZ=0) => {
         colorArray[i3 + 1] = mixedColor.g; // Set the second color (g)
         colorArray[i3 + 2] = mixedColor.b; // Set the last color (b)
     }
-    geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3)); // Set the attributes (color and position )
+    geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3)); // Set the attributes (color and position)
     geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
     return [geometry, material] // Return the geometry and material
 
 }
-
+/*
 export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => {
     // These galaxies are "egg shaped"
 
@@ -104,6 +104,65 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
 
     return [geometry, material]
 }
+*/
+
+export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => {
+    /* Create galaxy geometry and material */
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.PointsMaterial({
+        size: particleInfo.particleSize,
+        color: particleInfo.color,
+        depthWrite: false,
+        sizeAttenuation: true,
+        blending: THREE.AdditiveBlending,
+        vertexColors: true,
+    });
+
+    const count = particleInfo.count; // Number of particles
+    const positionsArray = new Float32Array(count * 3); // Stores the x, y, z coordinates for each particle
+    const colorArray = new Float32Array(count * 3); // Stores the colors for each particle
+    const insideColor = new THREE.Color('#ff6030'); // Set the inside color when its closest to the center
+    const outsideColor = new THREE.Color('#1b3984'); // Set the outside color when it's furthest from the center
+
+    /* ChatGPT was used to help determine the particle distribution. */
+    /* Elliptical Params */
+    const a = 5; // Semi-major axis
+    const b = 3; // Semi-minor axis
+    const c = 1; // Vertical stretch factor
+
+    /* Calculation for elliptical galaxy star positions */
+    for (let i = 0; i < count; i++) {
+
+        const r = Math.pow(Math.random(), 5); // Falloff for stars
+        const theta = Math.random() * 2 * Math.PI; // Random angle in xy-plane
+        const phi = Math.acos((Math.random() * 2) - 1); // Random angle for vertical distribution
+
+        /* Converts spherical coordinates to Cartesian for elliptical scaling */
+        const x = a * r * Math.sin(phi) * Math.cos(theta);
+        const y = c * r * Math.cos(phi);
+        const z = b * r * Math.sin(phi) * Math.sin(theta);
+
+        /* Mixed color effect */
+        const mixedColor = insideColor.clone(); // For the mixed color effect
+        mixedColor.lerp(outsideColor, r); // Implements mixing the colors
+
+        /* Specify x, y, and z coordinates for each particle */
+        positionsArray[i * 3] = x;
+        positionsArray[i * 3 + 1] = y;
+        positionsArray[i * 3 + 2] = z;
+
+        /* Specify the colors for each particle */
+        colorArray[i * 3] = mixedColor.r; // Set the first color (r)
+        colorArray[i * 3 + 1] = mixedColor.g; // Set the second color (g)
+        colorArray[i * 3 + 2] = mixedColor.b; // Set the last color (b)
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positionsArray, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+
+    return [geometry, material];
+}
+
 export const generateIrregularGalaxy = (particleInfo) => {
 
     const geometry = new THREE.BufferGeometry();
