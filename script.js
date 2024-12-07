@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
-import { generateEllipticalGalaxy, generateSpiralGalaxy } from './galaxy.js';
-import { drawImage } from './image.js';
+import { generateEllipticalGalaxy, generateIrregularGalaxy, generateSpiralGalaxy } from './galaxy.js';
 
 /* Global variables */
 let renderer, controls, scene, camera, mouseX, mouseY;
@@ -42,10 +41,7 @@ const sphereGeometry = new THREE.SphereGeometry(1, 64, 64);
 
 // const particles = generateSpiralGalaxy(PARTICLE_PARAMS);
 const particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
-
-// experimental 
-const lines =  await drawImage();
-console.log(particles);
+// const particles = generateIrregularGalaxy(PARTICLE_PARAMS);
 
 /* Materials */
 const sphereMaterial = new THREE.PointsMaterial({
@@ -72,21 +68,42 @@ window.addEventListener('resize', () => {
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const mouse3D = new THREE.Vector3();
+let coordsNear;
 
 const onMouseMove = (event) => {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = (event.clientY / window.innerHeight) * 2 + 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Assignment 3 implementation of "picking" to get mouse position from 2D to 3D 
+    coordsNear = new THREE.Vector3(mouse.x, mouse.y, 0);
+    raycaster.setFromCamera(coordsNear, camera);
+    var intersects = raycaster.intersectObject(invsplane);
+    if (intersects.length > 0) {
+        mouse3D.x = intersects[0].point.x;
+        mouse3D.y = intersects[0].point.y;
+        mouse3D.z = intersects[0].point.z;
+    }
 }
 
 window.addEventListener('mousemove', onMouseMove, false);
 
+// Implement invisible plane for mouse calculation similar to assignment 3 
+const geometry = new THREE.PlaneGeometry(20, 20);
+const material = new THREE.MeshBasicMaterial({visible: false});
+const invsplane = new THREE.Mesh(geometry, material);
+scene.add(invsplane);
+
 /* Call animation/rendering loop */
 animate();
+
+
 
 function animate() {
     const elapsedTime = clock.getElapsedTime();
 
     /* Update Objects */
+    invsplane.quaternion.copy(camera.quaternion);
+
     sphere.rotation.y = SPHERE_PARAMS.rotationSpeed * elapsedTime;
     particleMesh.rotation.y = PARTICLE_PARAMS.particleSpeed * elapsedTime;
 
@@ -103,14 +120,16 @@ function animate() {
 // This function was generated with the help of chatgpt to do the calculations of moving the particles 
 // with modifications to make it work for our purpose 
 function updateParticles() {
-    const posArray = particles[0].attributes.position.array;
+    const posArray = particles[0].attributes.position.array; // Access the internal positionArray 
 
     // Convert mouse to world coordinates
-    raycaster.setFromCamera(mouse, camera);
-    const plane = new THREE.Plane( new THREE.Vector3(0, 0, 0), 0);
-    raycaster.ray.intersectPlane(plane, mouse3D);
     var scaleEffect = 0.4
-    var threshold = 10;
+    var threshold = 5;
+    
+    if (mouse3D.x == 0) {
+        return;
+    }
+
     for (let i = 0; i < posArray.length; i += 3) {
         const dx = posArray[i] - mouse3D.x;
         const dy = posArray[i + 1] - mouse3D.y;
@@ -118,10 +137,10 @@ function updateParticles() {
 
         const distanceSquared = dx * dx + dy * dy + dz * dz;
 
-        if (distanceSquared < threshold ) {
+        if (distanceSquared < threshold * threshold ) {
             const distance = Math.sqrt(distanceSquared);
             const scale = (threshold - distance) / threshold; 
-            posArray[i] += dx * scale * scale * Math.random();
+            posArray[i] += dx * scale * scale * Math.random(); // Update the positions in the positionArray itself
             posArray[i + 1] += dy * scale * scaleEffect * Math.random();
             posArray[i + 2] += dz * scale * scaleEffect * Math.random();
         }
