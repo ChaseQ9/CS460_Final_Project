@@ -4,7 +4,8 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import { generateEllipticalGalaxy, generateIrregularGalaxy, generateSpiralGalaxy } from './galaxy.js';
 
 /* Global variables */
-let renderer, controls, scene, camera, mouseX, mouseY;
+let renderer, controls, scene, camera;
+let eKey = false; // Tracks whether left click is being pressed
 const clock = new THREE.Clock();
 
 /* Sphere Parameters */
@@ -54,38 +55,62 @@ const sphere = new THREE.Points(sphereGeometry, sphereMaterial);
 const particleMesh = new THREE.Points(particles[0], particles[1]);
 scene.add(sphere, particleMesh);
 
+/* Skybox Implementation */
+const skyboxGeometry = new THREE.SphereGeometry(500, 500, 500);
+const skyboxTexture = new THREE.TextureLoader().load('./assets/skybox.jpg'); // NASA Credit for Image: https://svs.gsfc.nasa.gov/4851
+const skyboxMaterial = new THREE.MeshBasicMaterial({map: skyboxTexture, side: THREE.BackSide, depthWrite: false});
+const skyboxMesh = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
+skyboxMesh.renderOrder = -1; // Load skybox first to prevent the particles from disappearing
+scene.add(skyboxMesh);
 
 /* Interaction */
-controls = new OrbitControls( camera, renderer.domElement );
-
-/* Handle window resize */
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
+controls = new OrbitControls(camera, renderer.domElement);
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const mouse3D = new THREE.Vector3();
 let coordsNear;
 
-const onMouseMove = (event) => {
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+/* This event listener monitors when the 'e' key is pressed. */
+window.addEventListener('keydown', function(event)  {
+   if (event.key.toLowerCase() === 'e' && !eKey) {
+       eKey = true;
+       console.log("The 'e' key is being pressed.")
+   }
+});
 
-    // Assignment 3 implementation of "picking" to get mouse position from 2D to 3D 
-    coordsNear = new THREE.Vector3(mouse.x, mouse.y, 0);
-    raycaster.setFromCamera(coordsNear, camera);
-    var intersects = raycaster.intersectObject(invsplane);
-    if (intersects.length > 0) {
-        mouse3D.x = intersects[0].point.x;
-        mouse3D.y = intersects[0].point.y;
-        mouse3D.z = intersects[0].point.z;
+/* This event listener monitors when the 'e' key is released. */
+window.addEventListener('keyup', function(event) {
+    if (event.key.toLowerCase() === 'e') {
+       eKey = false;
+       console.log("The 'e' key was released.")
+   }
+});
+
+/* This event listener tracks the mouse movement of the user and, if the e key is held, creates a bubbling effect of the particles. */
+window.addEventListener('mousemove', function(event) {
+    if (eKey) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        // Assignment 3 implementation of "picking" to get mouse position from 2D to 3D
+        coordsNear = new THREE.Vector3(mouse.x, mouse.y, 0);
+        raycaster.setFromCamera(coordsNear, camera);
+        var intersects = raycaster.intersectObject(invsplane);
+        if (intersects.length > 0) {
+            mouse3D.x = intersects[0].point.x;
+            mouse3D.y = intersects[0].point.y;
+            mouse3D.z = intersects[0].point.z;
+        }
     }
-}
+});
 
-window.addEventListener('mousemove', onMouseMove, false);
+/* This event listener handles any potential resizes the user may make.*/
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 
 // Implement invisible plane for mouse calculation similar to assignment 3 
 const geometry = new THREE.PlaneGeometry(20, 20);
@@ -95,8 +120,6 @@ scene.add(invsplane);
 
 /* Call animation/rendering loop */
 animate();
-
-
 
 function animate() {
     const elapsedTime = clock.getElapsedTime();
@@ -126,7 +149,7 @@ function updateParticles() {
     var scaleEffect = 0.4
     var threshold = 5;
     
-    if (mouse3D.x == 0) {
+    if (mouse3D.x === 0) {
         return;
     }
 
@@ -145,12 +168,8 @@ function updateParticles() {
             posArray[i + 2] += dz * scale * scaleEffect * Math.random();
         }
     }
-
     particles[0].attributes.position.needsUpdate = true; 
 }
-
-
-
 
 /* TweakPane Implementation */
 const pane = new Tweakpane.Pane();
