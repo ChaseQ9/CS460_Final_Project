@@ -124,7 +124,7 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
     const insideColor = new THREE.Color('#ff6030'); // Set the inside color when its closest to the center
     const outsideColor = new THREE.Color('#1b3984'); // Set the outside color when it's furthest from the center
 
-    /* ChatGPT was used to help determine the particle distribution. */
+    /* ChatGPT was used to help determine the particle distribution.  */
     /* Elliptical Params */
     const a = 5; // Semi-major axis
     const b = 3; // Semi-minor axis
