@@ -20,9 +20,10 @@ const PARTICLE_PARAMS = {
     particleSpeed: 0.1,
     color: '#ffffff',
     particleSize: 0.005,
-    count: 1000000,
+    count: 50000,
     branches: 3,
     radius: 5,
+    galaxy: 0,
 }
 
 /* Three.js code */
@@ -40,9 +41,7 @@ document.body.appendChild(renderer.domElement);
 /* Objects */
 const sphereGeometry = new THREE.SphereGeometry(1, 64, 64);
 
-// const particles = generateSpiralGalaxy(PARTICLE_PARAMS);
-const particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
-// const particles = generateIrregularGalaxy(PARTICLE_PARAMS);
+
 
 /* Materials */
 const sphereMaterial = new THREE.PointsMaterial({
@@ -52,8 +51,7 @@ const sphereMaterial = new THREE.PointsMaterial({
 
 /* Meshes */
 const sphere = new THREE.Points(sphereGeometry, sphereMaterial);
-const particleMesh = new THREE.Points(particles[0], particles[1]);
-scene.add(sphere, particleMesh);
+scene.add(sphere);
 
 /* Skybox Implementation */
 const skyboxGeometry = new THREE.SphereGeometry(500, 500, 500);
@@ -119,7 +117,6 @@ const invsplane = new THREE.Mesh(geometry, material);
 scene.add(invsplane);
 
 /* Call animation/rendering loop */
-animate();
 
 function animate() {
     const elapsedTime = clock.getElapsedTime();
@@ -135,9 +132,33 @@ function animate() {
     controls.update();
     renderer.render(scene, camera);
 
-
     // check for intersection
     updateParticles();
+}
+
+let particles = generateSpiralGalaxy(PARTICLE_PARAMS);
+// let particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
+// let particles = generateIrregularGalaxy(PARTICLE_PARAMS);
+
+let particleMesh = new THREE.Points(particles[0], particles[1]);
+scene.add(particleMesh);
+function updateGalaxy() {
+    if (PARTICLE_PARAMS.galaxy == 0) {
+        particleMesh.removeFromParent();
+        particles = generateSpiralGalaxy(PARTICLE_PARAMS);
+        particleMesh = new THREE.Points(particles[0], particles[1]);
+        scene.add(particleMesh);
+    } else if (PARTICLE_PARAMS.galaxy == 1) {
+        particleMesh.removeFromParent();
+        particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
+        particleMesh = new THREE.Points(particles[0], particles[1]);
+        scene.add(particleMesh);
+    } else if (PARTICLE_PARAMS.galaxy == 2) {
+        particleMesh.removeFromParent();
+        particles = generateIrregularGalaxy(PARTICLE_PARAMS);
+        particleMesh = new THREE.Points(particles[0], particles[1]);
+        scene.add(particleMesh);
+    }
 }
 
 // This function was generated with the help of chatgpt to do the calculations of moving the particles 
@@ -170,6 +191,8 @@ function updateParticles() {
     }
     particles[0].attributes.position.needsUpdate = true; 
 }
+
+animate();
 
 /* TweakPane Implementation */
 const pane = new Tweakpane.Pane();
@@ -221,4 +244,20 @@ particleFolder.addInput(PARTICLE_PARAMS, 'particleSize', {min: 0.001, max: 0.05,
    PARTICLE_PARAMS.particleSize = event.value;
    particles[1].size = event.value;
    particles[1].needsUpdate = true;
+});
+
+particleFolder.addInput(PARTICLE_PARAMS, 'count', {min: 1000, max: 1000000, step: 1000}).on('change', (event) => {
+    PARTICLE_PARAMS.count = event.value;
+    updateGalaxy();
+ });
+
+particleFolder.addInput(PARTICLE_PARAMS, 'galaxy', {
+    options: {
+        Spiral: 0,
+        Elliptical: 1,
+        Irregular: 2,
+    }
+}).on('change', (event) => {
+    PARTICLE_PARAMS.galaxy = event.value;
+    updateGalaxy();
 });
