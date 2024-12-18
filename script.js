@@ -5,7 +5,8 @@ import { generateEllipticalGalaxy, generateIrregularGalaxy, generateSpiralGalaxy
 
 /* Global variables */
 let renderer, controls, scene, camera;
-let eKey = false; // Tracks whether left click is being pressed
+let eKey = false; // Tracks whether the e key is being pressed
+let fKey = false; // Tracks whether the f key is being pressed
 const clock = new THREE.Clock();
 
 /* Particle Parameters */
@@ -47,70 +48,31 @@ const mouse = new THREE.Vector2();
 const mouse3D = new THREE.Vector3();
 let coordsNear;
 
-/* This event listener monitors when the 'e' key is pressed. */
-window.addEventListener('keydown', function(event)  {
-   if (event.key.toLowerCase() === 'e' && !eKey) {
-       eKey = true;
-       console.log("The 'e' key is being pressed.")
-   }
-});
-
-/* This event listener monitors when the 'e' key is released. */
-window.addEventListener('keyup', function(event) {
-    if (event.key.toLowerCase() === 'e') {
-       eKey = false;
-       console.log("The 'e' key was released.")
-   }
-});
-
-/* This event listener tracks the mouse movement of the user and, if the e key is held, creates a bubbling effect of the particles. */
-window.addEventListener('mousemove', function(event) {
-    if (eKey) {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-        // Assignment 3 implementation of "picking" to get mouse position from 2D to 3D
-        coordsNear = new THREE.Vector3(mouse.x, mouse.y, 0);
-        raycaster.setFromCamera(coordsNear, camera);
-        var intersects = raycaster.intersectObject(invsplane);
-        if (intersects.length > 0) {
-            mouse3D.x = intersects[0].point.x;
-            mouse3D.y = intersects[0].point.y;
-            mouse3D.z = intersects[0].point.z;
-        }
-    }
-});
-
-/* This event listener handles any potential resizes the user may make.*/
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
 // Implement invisible plane for mouse calculation similar to assignment 3 
 const geometry = new THREE.PlaneGeometry(20, 20);
 const material = new THREE.MeshBasicMaterial({visible: false});
 const invsplane = new THREE.Mesh(geometry, material);
 scene.add(invsplane);
 
-/* Call animation/rendering loop */
+/* Create a quaternion and rotate the invisible plane to align with galaxies */
+const invsplaneQuaternion = new THREE.Quaternion(Math.sin((-Math.PI / 2) / 2), 0, 0, Math.cos((-Math.PI / 2) / 2));
+invsplane.quaternion.copy(invsplaneQuaternion);
 
+/* Call animation/rendering loop */
 function animate() {
     const elapsedTime = clock.getElapsedTime();
 
     /* Update Objects */
-    invsplane.quaternion.copy(camera.quaternion);
-
-    particleMesh.rotation.y = GALAXY_PARAMS.particleSpeed * elapsedTime;
+    // particleMesh.rotation.y = GALAXY_PARAMS.particleSpeed * elapsedTime; // Rotate the galaxy
 
     requestAnimationFrame(animate);
 
     controls.update();
     renderer.render(scene, camera);
 
-    // check for intersection
-    updateParticles();
+    /* Apply any user-specified effects */
+    repulsionEffect();
+    blackholeEffect();
 }
 
 let particles = generateSpiralGalaxy(GALAXY_PARAMS);
@@ -119,18 +81,20 @@ let particles = generateSpiralGalaxy(GALAXY_PARAMS);
 
 let particleMesh = new THREE.Points(particles[0], particles[1]);
 scene.add(particleMesh);
+
+/* This function will generate a different galaxy type specified by the user */
 function updateGalaxy() {
-    if (GALAXY_PARAMS.galaxy == 0) {
+    if (GALAXY_PARAMS.galaxy === 0) {
         particleMesh.removeFromParent();
         particles = generateSpiralGalaxy(GALAXY_PARAMS);
         particleMesh = new THREE.Points(particles[0], particles[1]);
         scene.add(particleMesh);
-    } else if (GALAXY_PARAMS.galaxy == 1) {
+    } else if (GALAXY_PARAMS.galaxy === 1) {
         particleMesh.removeFromParent();
         particles = generateEllipticalGalaxy(GALAXY_PARAMS);
         particleMesh = new THREE.Points(particles[0], particles[1]);
         scene.add(particleMesh);
-    } else if (GALAXY_PARAMS.galaxy == 2) {
+    } else if (GALAXY_PARAMS.galaxy === 2) {
         particleMesh.removeFromParent();
         particles = generateIrregularGalaxy(GALAXY_PARAMS);
         particleMesh = new THREE.Points(particles[0], particles[1]);
@@ -138,45 +102,85 @@ function updateGalaxy() {
     }
 }
 
-// This function was generated with the help of chatgpt to do the calculations of moving the particles 
-// with modifications to make it work for our purpose 
-function updateParticles() {
-    const posArray = particles[0].attributes.position.array; // Access the internal positionArray 
-
-    // Convert mouse to world coordinates
-    var scaleEffect = 0.4
-    var threshold = 5;
-    
-    if (mouse3D.x === 0) {
-        return;
-    }
-
-    for (let i = 0; i < posArray.length; i += 3) {
-        const dx = posArray[i] - mouse3D.x;
-        const dy = posArray[i + 1] - mouse3D.y;
-        const dz = posArray[i + 2] - mouse3D.z;
-
-        const distanceSquared = dx * dx + dy * dy + dz * dz;
-
-        if (distanceSquared < threshold * threshold ) {
-            const distance = Math.sqrt(distanceSquared);
-            const scale = (threshold - distance) / threshold; 
-            posArray[i] += dx * scale * scale * Math.random(); // Update the positions in the positionArray itself
-            posArray[i + 1] += dy * scale * scaleEffect * Math.random();
-            posArray[i + 2] += dz * scale * scaleEffect * Math.random();
-        }
-    }
-    particles[0].attributes.position.needsUpdate = true; 
-}
-
 animate();
 
-/* TweakPane Implementation */
+/* ---------------- Beginning of Particle Effects Implementation ---------------- */
+
+// This function was generated with the help of chatgpt to do the calculations of moving the particles 
+// with modifications to make it work for our purpose 
+function repulsionEffect() {
+    if (eKey && !fKey) { // Do the repulsionEffect if only the 'e' key is being held
+        const posArray = particles[0].attributes.position.array; // Access the internal positionArray
+
+        /* Effect parameters */
+        var scaleEffect = 0.1 // This specifies how fast the particles will be effected
+        var threshold = 2; // This specifies the distance for particles to be targeted by the effect
+
+        if (mouse3D.x === 0) {
+            return;
+        }
+
+        for (let i = 0; i < posArray.length; i += 3) {
+            const dx = posArray[i] - mouse3D.x;
+            const dy = posArray[i + 1] - mouse3D.y;
+            const dz = posArray[i + 2] - mouse3D.z;
+
+            const distanceSquared = dx * dx + dy * dy + dz * dz;
+
+            if (distanceSquared < threshold * threshold ) {
+                const distance = Math.sqrt(distanceSquared);
+                const scale = (threshold - distance) / threshold;
+                posArray[i] += dx * scale * scaleEffect * Math.random(); // Update the positions in the positionArray itself
+                posArray[i + 1] += dy * scale * scaleEffect * Math.random();
+                posArray[i + 2] += dz * scale * scaleEffect * Math.random();
+            }
+        }
+        particles[0].attributes.position.needsUpdate = true;
+    }
+}
+
+/* This function is a modification of the repulsionEffect, which will vacuum particles towards the cursor */
+function blackholeEffect() {
+    if (fKey && !eKey) { // Do the blackholeEffect if only the 'f' key is being held
+        const posArray = particles[0].attributes.position.array; // Access the internal positionArray
+
+        /* Effect parameters */
+        var scaleEffect = 0.1 // This specifies how fast the particles will be effected
+        var threshold = 2; // This specifies the distance for particles to be targeted by the effect
+
+        if (mouse3D.x === 0) {
+            return;
+        }
+
+        for (let i = 0; i < posArray.length; i += 3) {
+            /* Key difference: the displacement direction here is reversed compared to repulsionEffect */
+            const dx = mouse3D.x - posArray[i];
+            const dy = mouse3D.y - posArray[i + 1];
+            const dz = mouse3D.z - posArray[i + 2];
+
+            const distanceSquared= dx * dx + dy * dy + dz * dz;
+
+            if (distanceSquared < threshold * threshold ) {
+                const distance = Math.sqrt(distanceSquared);
+                const scale = (threshold - distance) / threshold;
+                posArray[i] += dx * scale * scaleEffect * Math.random(); // Update the positions in the positionArray itself
+                posArray[i + 1] += dy * scale * scaleEffect * Math.random();
+                posArray[i + 2] += dz * scale * scaleEffect * Math.random();
+            }
+        }
+        particles[0].attributes.position.needsUpdate = true;
+    }
+}
+
+/* ---------------- End of Particle Effects Implementation ---------------- */
+
+/* ---------------- TweakPane Implementation ---------------- */
+
 const pane = new Tweakpane.Pane();
 
-/* Particle Folder */
+/* Galaxy Folder */
 const galaxyFolder = pane.addFolder({
-    title: 'Particles',
+    title: 'Galaxy',
     expanded: false,
 });
 
@@ -214,3 +218,56 @@ galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
     GALAXY_PARAMS.galaxy = event.value;
     updateGalaxy();
 });
+
+/* ---------------- End of TweakPane Implementation ---------------- */
+
+/* ---------------- Beginning of Event Listeners Implementation ---------------- */
+
+/* This event listener monitors when the 'e' and 'f' keys are pressed. */
+window.addEventListener('keydown', function(event)  {
+    if (event.key.toLowerCase() === 'e' && !eKey) {
+        eKey = true;
+        console.log("The 'e' key is being pressed.")
+    }
+    if (event.key.toLowerCase() === 'f' && !fKey) {
+        fKey = true;
+        console.log("The 'f' key is being pressed.")
+    }
+});
+
+/* This event listener monitors when the 'e' and 'f' keys are released. */
+window.addEventListener('keyup', function(event) {
+    if (event.key.toLowerCase() === 'e') {
+        eKey = false;
+        console.log("The 'e' key was released.")
+    }
+    if (event.key.toLowerCase() === 'f') {
+        fKey = false;
+        console.log("The 'f' key was released.")
+    }
+});
+
+/* This event listener tracks the mouse movement of the user */
+window.addEventListener('mousemove', function(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+    // Assignment 3 implementation of "picking" to get mouse position from 2D to 3D
+    coordsNear = new THREE.Vector3(mouse.x, mouse.y, 0);
+    raycaster.setFromCamera(coordsNear, camera);
+    var intersects = raycaster.intersectObject(invsplane);
+    if (intersects.length > 0) {
+        mouse3D.x = intersects[0].point.x;
+        mouse3D.y = intersects[0].point.y;
+        mouse3D.z = intersects[0].point.z;
+    }
+});
+
+/* This event listener handles any potential resizes the user may make.*/
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ---------------- End of Event Listeners Implementation ---------------- */

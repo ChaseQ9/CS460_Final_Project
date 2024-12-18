@@ -52,7 +52,6 @@ export const generateSpiralGalaxy = (particleInfo, centerX=0, centerZ=0) => {
     geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3)); // Set the attributes (color and position)
     geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
     return [geometry, material] // Return the geometry and material
-
 }
 
 export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => {
@@ -92,8 +91,8 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
         const z = b * r * Math.sin(phi) * Math.sin(theta);
 
         /* Mixed color effect */
-        const mixedColor = insideColor.clone(); // For the mixed color effect
-        mixedColor.lerp(outsideColor, r); // Implements mixing the colors
+        const mixedColor = insideColor.clone();
+        mixedColor.lerp(outsideColor, r);
 
         /* Specify x, y, and z coordinates for each particle */
         positionsArray[i * 3] = x;
@@ -101,9 +100,9 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
         positionsArray[i * 3 + 2] = z;
 
         /* Specify the colors for each particle */
-        colorArray[i * 3] = mixedColor.r; // Set the first color (r)
-        colorArray[i * 3 + 1] = mixedColor.g; // Set the second color (g)
-        colorArray[i * 3 + 2] = mixedColor.b; // Set the last color (b)
+        colorArray[i * 3] = mixedColor.r;
+        colorArray[i * 3 + 1] = mixedColor.g;
+        colorArray[i * 3 + 2] = mixedColor.b;
     }
 
     geometry.setAttribute('position', new THREE.BufferAttribute(positionsArray, 3));
