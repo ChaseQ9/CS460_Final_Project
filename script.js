@@ -4,20 +4,21 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import { generateEllipticalGalaxy, generateIrregularGalaxy, generateSpiralGalaxy } from './galaxy.js';
 
 /* Global variables */
-let renderer, controls, scene, camera;
+let renderer, controls, scene, camera, deltaTime;
 let eKey = false; // Tracks whether the e key is being pressed
 let fKey = false; // Tracks whether the f key is being pressed
 const clock = new THREE.Clock();
 
 /* Particle Parameters */
 const GALAXY_PARAMS = {
-    particleSpeed: 0.1,
+    particleSpeed: 1,
     color: '#ffffff',
     particleSize: 0.005,
     count: 50000,
     branches: 3,
     radius: 5,
-    galaxy: 0,
+    galaxy: 1,
+    ellipticalOrbits: [],
 }
 
 /* Three.js code */
@@ -60,10 +61,7 @@ invsplane.quaternion.copy(invsplaneQuaternion);
 
 /* Call animation/rendering loop */
 function animate() {
-    const elapsedTime = clock.getElapsedTime();
-
-    /* Update Objects */
-    // particleMesh.rotation.y = GALAXY_PARAMS.particleSpeed * elapsedTime; // Rotate the galaxy
+    deltaTime = clock.getDelta();
 
     requestAnimationFrame(animate);
 
@@ -73,17 +71,30 @@ function animate() {
     /* Apply any user-specified effects */
     repulsionEffect();
     blackholeEffect();
+
+    /* Update the particle position for the galaxy */
+    switch (GALAXY_PARAMS.galaxy) {
+        case 0: // If the current galaxy is spiral
+            updateSpiralGalaxy();
+            break;
+        case 1: // If the current galaxy is elliptical
+            updateEllipticalGalaxy(deltaTime);
+            break;
+        case 2: // If the current galaxy is irregular
+            // updateIrregularGalaxy();
+            break;
+    }
 }
 
-let particles = generateSpiralGalaxy(GALAXY_PARAMS);
-// let particles = generateEllipticalGalaxy(GALAXY_PARAMS);
+// let particles = generateSpiralGalaxy(GALAXY_PARAMS);
+let particles = generateEllipticalGalaxy(GALAXY_PARAMS);
 // let particles = generateIrregularGalaxy(GALAXY_PARAMS);
 
 let particleMesh = new THREE.Points(particles[0], particles[1]);
 scene.add(particleMesh);
 
 /* This function will generate a different galaxy type specified by the user */
-function updateGalaxy() {
+function changeGalaxy() {
     if (GALAXY_PARAMS.galaxy === 0) {
         particleMesh.removeFromParent();
         particles = generateSpiralGalaxy(GALAXY_PARAMS);
@@ -103,6 +114,69 @@ function updateGalaxy() {
 }
 
 animate();
+
+/* ---------------- Beginning of Particle Rotation Updates Implementation ---------------- */
+
+/* This function updates the particles of the elliptical galaxy to rotate about the y-axis */
+function updateSpiralGalaxy() {
+    /* We use the positions array to update particle position, so we need to apply rotation matrix directly.
+    *
+    *      [ cos(theta), 0, sin(theta),
+    * Ry =       0,      1,     0
+    *       -sin(theta), 0, cos(theta) ]
+    *
+    * I couldn't find this rotation matrix from the lecture slides; I found the y-rotation matrix from this article:
+    * https://en.wikipedia.org/wiki/Rotation_matrix */
+
+    const posArray = particles[0].attributes.position.array; // Access the internal positionArray
+    const radius = GALAXY_PARAMS.radius; // The radius of the galaxy
+
+    for (let i = 0; i < posArray.length; i += 3) {
+        let x = posArray[i];
+        let z = posArray[i + 2];
+
+        /* Rotate each particle such that particles further from the center rotate slower, creating a lag effect */
+        const distance = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
+        let angle = ((Math.PI / 900) * (1 - (distance / radius) * .8)) * GALAXY_PARAMS.particleSpeed;
+
+        /* Rotation matrix */
+        posArray[i] = x * Math.cos(angle) - z * Math.sin(angle); // Update x position
+        posArray[i + 2] = x * Math.sin(angle) + z * Math.cos(angle); // Update z position
+    }
+    particles[0].attributes.position.needsUpdate = true;
+}
+
+/* This function updates the particles of the elliptical galaxy to travel about the y-axis in an elliptical fashion */
+function updateEllipticalGalaxy(deltaTime) {
+    /* Again, we use the positions array to update particle position, so we need to apply the position updates directly.
+     * For an ellipse, it can be described by the following parametric equations:
+     *
+     * x = a * cos(theta)
+     * z = b * sin(theta)
+     *
+     * Where "a" is the radius of the ellipse in the x direction and "b" is the radius in the z direction.
+     * I found these formulas for elliptical motion here: https://www.mathopenref.com/coordparamellipse.html */
+
+    const orbitSpeed = (Math.PI / 20) * GALAXY_PARAMS.particleSpeed; // The user-defined orbital speed
+    const posArray = particles[0].attributes.position.array; // Access the internal positionArray
+    const orbitParams = GALAXY_PARAMS.ellipticalOrbits; // Orbit params for each particle
+
+    for (let i = 0; i < orbitParams.length; i++) {
+        const localOrbitSpeed = (1 - (orbitParams[i].a / 5) * .8) * orbitSpeed;
+
+        /* Calculate the updated x and z positions and update the angle */
+        orbitParams[i].theta += localOrbitSpeed * deltaTime;
+        let x = GALAXY_PARAMS.ellipticalOrbits[i].a * Math.cos(orbitParams[i].theta);
+        let z = GALAXY_PARAMS.ellipticalOrbits[i].b * Math.sin(orbitParams[i].theta);
+
+        /* Update the positions array to the new values */
+        posArray[i * 3] = x;
+        posArray[i * 3 + 2] = z;
+    }
+    particles[0].attributes.position.needsUpdate = true;
+}
+
+/* ---------------- End of Particle Rotation Updates Implementation---------------- */
 
 /* ---------------- Beginning of Particle Effects Implementation ---------------- */
 
@@ -205,7 +279,7 @@ galaxyFolder.addInput(GALAXY_PARAMS, 'particleSize', {min: 0.001, max: 0.05, ste
 
 galaxyFolder.addInput(GALAXY_PARAMS, 'count', {min: 1000, max: 1000000, step: 1000}).on('change', (event) => {
     GALAXY_PARAMS.count = event.value;
-    updateGalaxy();
+    changeGalaxy();
  });
 
 galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
@@ -216,7 +290,7 @@ galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
     }
 }).on('change', (event) => {
     GALAXY_PARAMS.galaxy = event.value;
-    updateGalaxy();
+    changeGalaxy();
 });
 
 /* ---------------- End of TweakPane Implementation ---------------- */

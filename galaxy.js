@@ -30,7 +30,7 @@ export const generateSpiralGalaxy = (particleInfo, centerX=0, centerZ=0) => {
 
     for (let i = 0; i < count; i++) {
         let i3 = i * 3;
-        const radius = Math.random() * particleInfo.radius; // the radius (how big) we want the galaxy 
+        const radius = Math.random() * particleInfo.radius; // the radius (how big) we want the galaxy
         const spinMove = radius * spin; 
         const branchAngle = ( i % branches) / branches * Math.PI * 2; // the angle for the different branches 
 
@@ -55,6 +55,8 @@ export const generateSpiralGalaxy = (particleInfo, centerX=0, centerZ=0) => {
 }
 
 export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => {
+    particleInfo.ellipticalOrbits = []; // Clear the elliptical orbits
+
     /* Create galaxy geometry and material */
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.PointsMaterial({
@@ -82,13 +84,21 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
     for (let i = 0; i < count; i++) {
 
         const r = Math.pow(Math.random(), 5); // Falloff for stars
-        const theta = Math.random() * 2 * Math.PI; // Random angle in xy-plane
+        const theta = Math.random() * 2 * Math.PI; // Random angle in xz-plane
         const phi = Math.acos((Math.random() * 2) - 1); // Random angle for vertical distribution
 
         /* Converts spherical coordinates to Cartesian for elliptical scaling */
         const x = a * r * Math.sin(phi) * Math.cos(theta);
         const y = c * r * Math.cos(phi);
         const z = b * r * Math.sin(phi) * Math.sin(theta);
+
+        /* Store the elliptical orbits (these are used to update the particle positions in script.js) */
+        particleInfo.ellipticalOrbits.push({
+            /* Note: ChatGPT helped me debug here; my calculations for a and b were originally incorrect */
+            a: Math.abs(x / Math.cos(theta)),
+            b: Math.abs(z / Math.sin(theta)),
+            theta: theta,
+        });
 
         /* Mixed color effect */
         const mixedColor = insideColor.clone();
