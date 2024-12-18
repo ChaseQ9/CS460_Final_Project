@@ -54,57 +54,6 @@ export const generateSpiralGalaxy = (particleInfo, centerX=0, centerZ=0) => {
     return [geometry, material] // Return the geometry and material
 
 }
-/*
-export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => {
-    // These galaxies are "egg shaped"
-
-    const insideColor = new THREE.Color('#1b3984'); // Set the inside color when its closest to the center 
-    const outsideColor = new THREE.Color('#ff6030'); // Set the outside color when its furthest from the center
-    
-    const geometry = new THREE.BufferGeometry();
-    const material = new THREE.PointsMaterial({
-        size: particleInfo.particleSize,
-        color: particleInfo.color,
-        depthWrite: false,
-        sizeAttenuation: true,
-        blending: THREE.AdditiveBlending,
-        vertexColors: true,
-    });
-    const count = particleInfo.count;
-    // Bigger radius looks nicer on the ellipticial galaxy 
-    // usually they are filled in though i need to figure out how to do that
-    const radius = particleInfo.radius * 2;
-    const posArray = new Float32Array(count * 3);
-    const colorArray = new Float32Array(count * 3);
-    // Much of the math for this one was just guess and check to see if it looks cool
-    for (let i = 0; i < count; i++) {
-        const r = Math.sqrt(Math.random());
-        const angle = ( Math.PI * 2 * Math.random());
-
-        let i3 = i * 3;
-        
-        const mixedColor = insideColor.clone(); // For the mixed color effect
-        mixedColor.lerp(outsideColor, (Math.random() * particleInfo.radius) / particleInfo.radius); // Implements mixing the colors
-
-        const randomX = r * Math.cos(angle) * radius;
-        const randomY = r * (Math.random() - 0.5) * radius * 0.2;
-        const randomZ = Math.sin(angle) * radius/2;
-
-        posArray[i3] = randomX + centerX;
-        posArray[i3 + 1] = randomY;
-        posArray[i3 + 2] = randomZ + centerZ;
-
-        colorArray[i3] = mixedColor.r; // Set the first color (r)
-        colorArray[i3 + 1] = mixedColor.g; // Set the second color (g)
-        colorArray[i3 + 2] = mixedColor.b; // Set the last color (b)
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-
-    return [geometry, material]
-}
-*/
 
 export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => {
     /* Create galaxy geometry and material */
@@ -164,7 +113,7 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
 }
 
 export const generateIrregularGalaxy = (particleInfo) => {
-
+    /* Create galaxy geometry and material */
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.PointsMaterial({
         size: particleInfo.particleSize,

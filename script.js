@@ -8,15 +8,8 @@ let renderer, controls, scene, camera;
 let eKey = false; // Tracks whether left click is being pressed
 const clock = new THREE.Clock();
 
-/* Sphere Parameters */
-const SPHERE_PARAMS = {
-    rotationSpeed: 0.5,
-    color: '#ff0055',
-    sphereSize: 0.005,
-};
-
 /* Particle Parameters */
-const PARTICLE_PARAMS = {
+const GALAXY_PARAMS = {
     particleSpeed: 0.1,
     color: '#ffffff',
     particleSize: 0.005,
@@ -37,21 +30,6 @@ renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setClearColor(0x9a52a3, .15);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-
-/* Objects */
-const sphereGeometry = new THREE.SphereGeometry(1, 64, 64);
-
-
-
-/* Materials */
-const sphereMaterial = new THREE.PointsMaterial({
-    size: SPHERE_PARAMS.sphereSize,
-    color: SPHERE_PARAMS.color,
-});
-
-/* Meshes */
-const sphere = new THREE.Points(sphereGeometry, sphereMaterial);
-scene.add(sphere);
 
 /* Skybox Implementation */
 const skyboxGeometry = new THREE.SphereGeometry(500, 500, 500);
@@ -124,8 +102,7 @@ function animate() {
     /* Update Objects */
     invsplane.quaternion.copy(camera.quaternion);
 
-    sphere.rotation.y = SPHERE_PARAMS.rotationSpeed * elapsedTime;
-    particleMesh.rotation.y = PARTICLE_PARAMS.particleSpeed * elapsedTime;
+    particleMesh.rotation.y = GALAXY_PARAMS.particleSpeed * elapsedTime;
 
     requestAnimationFrame(animate);
 
@@ -136,26 +113,26 @@ function animate() {
     updateParticles();
 }
 
-let particles = generateSpiralGalaxy(PARTICLE_PARAMS);
-// let particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
-// let particles = generateIrregularGalaxy(PARTICLE_PARAMS);
+let particles = generateSpiralGalaxy(GALAXY_PARAMS);
+// let particles = generateEllipticalGalaxy(GALAXY_PARAMS);
+// let particles = generateIrregularGalaxy(GALAXY_PARAMS);
 
 let particleMesh = new THREE.Points(particles[0], particles[1]);
 scene.add(particleMesh);
 function updateGalaxy() {
-    if (PARTICLE_PARAMS.galaxy == 0) {
+    if (GALAXY_PARAMS.galaxy == 0) {
         particleMesh.removeFromParent();
-        particles = generateSpiralGalaxy(PARTICLE_PARAMS);
+        particles = generateSpiralGalaxy(GALAXY_PARAMS);
         particleMesh = new THREE.Points(particles[0], particles[1]);
         scene.add(particleMesh);
-    } else if (PARTICLE_PARAMS.galaxy == 1) {
+    } else if (GALAXY_PARAMS.galaxy == 1) {
         particleMesh.removeFromParent();
-        particles = generateEllipticalGalaxy(PARTICLE_PARAMS);
+        particles = generateEllipticalGalaxy(GALAXY_PARAMS);
         particleMesh = new THREE.Points(particles[0], particles[1]);
         scene.add(particleMesh);
-    } else if (PARTICLE_PARAMS.galaxy == 2) {
+    } else if (GALAXY_PARAMS.galaxy == 2) {
         particleMesh.removeFromParent();
-        particles = generateIrregularGalaxy(PARTICLE_PARAMS);
+        particles = generateIrregularGalaxy(GALAXY_PARAMS);
         particleMesh = new THREE.Points(particles[0], particles[1]);
         scene.add(particleMesh);
     }
@@ -197,67 +174,43 @@ animate();
 /* TweakPane Implementation */
 const pane = new Tweakpane.Pane();
 
-/* Sphere Folder */
-const sphereFolder = pane.addFolder({
-    title: 'Sphere',
-    expanded: false,
-});
-
-/* Update sphere rotation speed upon user change */
-sphereFolder.addInput(SPHERE_PARAMS, 'rotationSpeed', {min: -3, max: 3, step: 0.1}).on('change', (event) => {
-    SPHERE_PARAMS.rotationSpeed = event.value;
-});
-
-/* Update sphere color upon user change */
-sphereFolder.addInput(SPHERE_PARAMS, 'color').on('change', (event) => {
-    sphereMaterial.color = new THREE.Color(event.value);
-    sphereMaterial.needsUpdate = true;
-});
-
-/* Update sphere particle size upon user request */
-sphereFolder.addInput(SPHERE_PARAMS, 'sphereSize', {min: 0.001, max: 0.05, step: 0.001}).on('change', (event) => {
-    SPHERE_PARAMS.sphereSize = event.value;
-    sphereMaterial.size = event.value;
-    sphereMaterial.needsUpdate = true;
-});
-
 /* Particle Folder */
-const particleFolder = pane.addFolder({
+const galaxyFolder = pane.addFolder({
     title: 'Particles',
     expanded: false,
 });
 
 /* Update particle speed upon user change */
-particleFolder.addInput(PARTICLE_PARAMS, 'particleSpeed', {min: -3, max: 3, step: 0.1}).on('change', (event) => {
-    PARTICLE_PARAMS.particleSpeed = event.value;
+galaxyFolder.addInput(GALAXY_PARAMS, 'particleSpeed', {min: -3, max: 3, step: 0.1}).on('change', (event) => {
+    GALAXY_PARAMS.particleSpeed = event.value;
 });
 
 /* Update particle color upon user change */
-particleFolder.addInput(PARTICLE_PARAMS, 'color').on('change', (event) => {
-    PARTICLE_PARAMS.color = event.value;
+galaxyFolder.addInput(GALAXY_PARAMS, 'color').on('change', (event) => {
+    GALAXY_PARAMS.color = event.value;
     particles[1].color = new THREE.Color(event.value);
     particles[1].needsUpdate = true;
 });
 
 /* Update non-sphere particle size upon user request */
-particleFolder.addInput(PARTICLE_PARAMS, 'particleSize', {min: 0.001, max: 0.05, step: 0.001}).on('change', (event) => {
-   PARTICLE_PARAMS.particleSize = event.value;
+galaxyFolder.addInput(GALAXY_PARAMS, 'particleSize', {min: 0.001, max: 0.05, step: 0.001}).on('change', (event) => {
+   GALAXY_PARAMS.particleSize = event.value;
    particles[1].size = event.value;
    particles[1].needsUpdate = true;
 });
 
-particleFolder.addInput(PARTICLE_PARAMS, 'count', {min: 1000, max: 1000000, step: 1000}).on('change', (event) => {
-    PARTICLE_PARAMS.count = event.value;
+galaxyFolder.addInput(GALAXY_PARAMS, 'count', {min: 1000, max: 1000000, step: 1000}).on('change', (event) => {
+    GALAXY_PARAMS.count = event.value;
     updateGalaxy();
  });
 
-particleFolder.addInput(PARTICLE_PARAMS, 'galaxy', {
+galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
     options: {
         Spiral: 0,
         Elliptical: 1,
         Irregular: 2,
     }
 }).on('change', (event) => {
-    PARTICLE_PARAMS.galaxy = event.value;
+    GALAXY_PARAMS.galaxy = event.value;
     updateGalaxy();
 });
