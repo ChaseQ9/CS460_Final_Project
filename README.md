@@ -70,9 +70,9 @@ We sourced some of the mathematics from these sources.
 
 ### CS460 Lectures
 We applied knowledge from the CS460 lecture slides. Examples include
-1. "Picking". This is a technique we learned in assignment 3 where we used an invisible plane in order to project from 2D screen space into the 3D scene.
-2. "Skybox". This is a technique we learned towards the end of the semester in which we render an image (in our case) to make the user feel like they are within space itself when in reality they are just in the illusion of a 3D environment around them. 
-3. Rotation Matrices: A rotation matrix was used on each particle in the spiral galaxy to have them rotate about the world y-axis.
+1. Picking. This is a technique we learned in assignment 3 where we used an invisible plane in order to project from 2D screen space into the 3D scene.
+2. Skybox. This is a technique we learned towards the end of the semester in which we render an image (in our case) to make the user feel like they are within space itself when in reality they are just in the illusion of a 3D environment around them. 
+3. Rotation Matrices. A rotation matrix was used on each particle in the spiral galaxy to have them rotate about the world y-axis.
 
 ### Stack Overflow
 References to stack overflow for specific three.js implementations practices or best practices overall were referred to occasionally. 
