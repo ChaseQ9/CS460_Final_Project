@@ -215,7 +215,7 @@ function updateEllipticalGalaxy(deltaTime) {
     const orbitParams = GALAXY_PARAMS.ellipticalOrbits; // Orbit params for each particle
 
     for (let i = 0; i < orbitParams.length; i++) {
-        const localOrbitSpeed = (1 - (orbitParams[i].a / 5) * .8) * orbitSpeed;
+        const localOrbitSpeed = (1 - (orbitParams[i].a / 10) * .8) * orbitSpeed;
 
         /* Calculate the updated x and z positions and update the angle */
         orbitParams[i].theta += localOrbitSpeed * deltaTime;
