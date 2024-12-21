@@ -114,7 +114,7 @@ function animate() {
             break;
         case 3: // If the current galaxy is a quasar
             GALAXY_PARAMS.particleSpeed = 50.0;
-            updateEllipticalGalaxy(deltaTime);
+            updateSpiralGalaxy(deltaTime);
             updateQuasarBeams();
             break;
     }
@@ -129,6 +129,18 @@ scene.add(particleMesh);
 
 /* This function will generate a different galaxy type specified by the user */
 function changeGalaxy() {
+    /* Remove the black hole and beams */
+
+    if (GALAXY_PARAMS.galaxy !== 3) {
+        scene.remove(blackHoleMesh);
+        scene.remove(quasarBeamMesh);
+    }
+
+    if (GALAXY_PARAMS.galaxy !== 2) {
+        fKey = false;
+        eKey = false;
+    }
+
     if (GALAXY_PARAMS.galaxy === 0) {
         particleMesh.removeFromParent();
         particles = generateSpiralGalaxy(GALAXY_PARAMS);
@@ -157,12 +169,6 @@ function changeGalaxy() {
         quasarBeams = generateQuasarBeams(GALAXY_PARAMS);
         quasarBeamMesh = new THREE.Points(quasarBeams[0], quasarBeams[1]);
         scene.add(quasarBeamMesh);
-    }
-
-    /* Remove the black hole and beams */
-    if (GALAXY_PARAMS.galaxy !== 3) {
-        scene.remove(blackHoleMesh);
-        scene.remove(quasarBeamMesh);
     }
 }
 

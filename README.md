@@ -1,8 +1,12 @@
 # Particulum - CS460_Final_Project
 ## By Chase Quigley and Liam Willis
-This is the repository for our CS 460 final project.
 
 ![image] ("https://github.com/Lykos3D/CS460_Final_Project/tree/main/assets/Elliptical.png")
+
+## Description
+Particulum is a 3D particle simulator which primarily aims to model various space objects, such as spiral galaxies, elliptical galaxies, and quasars. The simulator also allows the user to 
+adjust various parameters to create 
+
 ## Usage 
 Users can freely move around the simulated galaxy in front of them by moving the mouse on their computer. Users also have the ability to tweak the simulation by our implementation of TweakPane. We offer the ability to change the particle speed, particle size, particle count, and color. We also offer the ability for users to change between the spiral, elliptical, and irregular galaxy implementations. 
 

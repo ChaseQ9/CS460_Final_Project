@@ -168,7 +168,7 @@ export const generateQuasarDisk = (particleInfo, centerX=0, centerZ=0) => {
         const phi = Math.acos((Math.random() * 2) - 1); // Random angle for vertical distribution
 
         /* Converts spherical coordinates to Cartesian for elliptical scaling */
-        const x = radius * r * Math.sin(phi) * Math.cos(theta);
+        const x = radius * 2 * r * Math.sin(phi) * Math.cos(theta);
         const y = 0.15 * r * Math.cos(phi); // The 0.5 here makes the disk more flat
         const z = radius * r * Math.sin(phi) * Math.sin(theta);
 
