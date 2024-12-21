@@ -13,7 +13,7 @@ This simulator doesn't require any complex installation. All that is required is
 ## How to - Guide
 Upon loading the page, the default elliptical galaxy and parameters will be set. These parameters are able to be configured in the TweakPane menu at the top right of the screen. There are four
 different folders:
-* General Galaxy Settings: These settings will mostly apply to all particles, regardless of galaxy time. They include:
+* General Galaxy Settings: These settings will mostly apply to all particles, regardless of galaxy type. They include:
   * Galaxy type: This menu allows you to select between the different types of galaxies: Spiral, Elliptical, Heartbeat, and Quasar. 
   * Count: This allows you to adjust the number of particles that will load for the galaxy (warning: expensive)!
   * Particle Speed: This will adjust the speed at which the particles will revolve about the center of the galaxy. 
@@ -24,9 +24,13 @@ different folders:
   * Radius: This changes the total radius of the spiral galaxy.
 * Elliptical Galaxy Specifics: These settings will only apply if the Elliptical Galaxy is selected:
   * Semi Major Axis: This setting allows the user to change the shape of the galaxy by making it "longer."
-  * Semi Major Axis: This setting allows the user to change the shape of the galaxy by making it "wider."
+  * Semi Minor Axis: This setting allows the user to change the shape of the galaxy by making it "wider."
 * Quasar: These settings will only apply if the Quasar is selected:
   * Beam Height: This will change the height of the beam shooting vertically from the black hole.
+
+There are also two modes that the user can use to move the particles with the mouse:
+* Repulsion Mode: Hold 'e' and hover your mouse to a specific location to have all the particles move away from the cursor.
+* Black Hole Mode: Hold 'f' and hover your mouse to a specific location to have all the particles be pulled towards the cursor.
 
 ## Visuals 
 
@@ -40,10 +44,11 @@ different folders:
 ![quasar](./assets/Quasar.png)
 
 ## Challenges 
-* Creating the specific shapes, such as our elliptical galaxy
-* Particle distributions
-* Render ordering issues
-* Implementing the invisible plane in a 3D environment 
+We encountered many challenges when making this project
+* For the elliptical galaxy, calculating the correct values for the semi-major and semi-minor axes proved to be very difficult, and ChatGPT helped immensely for debugging and creating the correct calculations (lines 97-98). These two values for a and b were crucial for creating the correct particle updates, and for a while the elliptical galaxy had an odd divot. 
+* For the skybox, it initially would delete all the particles upon loading. To fix this, we had to make some render ordering adjustments so that the skybox would load first, allowing the particles to remain.
+* The invisible plane also gave us some issues. For example, we were having issues with the raycasting effect, which was giving some inconsistent effects and causing the black hole and repulsion effects to target the wrong location. We fixed this by aligning the invisible plane to be in the same plane as the galaxies, creating the targeted behavior.
+* The lagging effect: one of the features we implemented was the lagging effect, which makes it so that particles further from the galactic center move slightly slower than those near the center, creating an interesting visualization. However, this required us to refactor the code such that each particle's position is directly changed after each frame, rather than just rotating the entire mesh with a quaternion. This was very laborious and required quite a lot of mathematics, from applying a rotation matrix for each particle in the case of the spiral galaxy to using parametric equations and the semi-minor and major axes to update the particles for the elliptical galaxy.
 
 ## References 
 ### Github Tutorial
