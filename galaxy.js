@@ -75,8 +75,8 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
 
     /* ChatGPT was used to help determine the particle distribution.  */
     /* Elliptical Params */
-    const a = 5; // Semi-major axis
-    const b = 3; // Semi-minor axis
+    const a = particleInfo.semiMajor; // Semi-major axis
+    const b = particleInfo.semiMinor; // Semi-minor axis
     const c = 1; // Vertical stretch factor
 
     /* Calculation for elliptical galaxy star positions */
@@ -134,5 +134,130 @@ export const generateHeartbeatGalaxy = (particleInfo) => {
     }
     geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
     
+    return [geometry, material];
+}
+
+export const generateQuasarDisk = (particleInfo, centerX=0, centerZ=0) => {
+    particleInfo.ellipticalOrbits = []; // Clear the elliptical orbits
+
+    /* Create quasar geometry and material */
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.PointsMaterial({
+        size: particleInfo.particleSize,
+        color: particleInfo.color,
+        depthWrite: false,
+        sizeAttenuation: true,
+        blending: THREE.AdditiveBlending,
+        vertexColors: true,
+    });
+
+    const count = particleInfo.count; // Number of particles
+    const positionsArray = new Float32Array(count * 3); // Stores the x, y, z coordinates for each particle
+    const colorArray = new Float32Array(count * 3); // Stores the colors for each particle
+    const insideColor = new THREE.Color('#ff6030'); // Set the inside color when its closest to the center
+    const outsideColor = new THREE.Color('#1b3984'); // Set the outside color when it's furthest from the center
+
+    /* Disk Params */
+    const radius = 2.5; // Radius of the disk
+
+    /* Calculation for particle positions (much of this is similar to the elliptical galaxy) */
+    for (let i = 0; i < count; i++) {
+
+        const r = Math.pow(Math.random(), 1); // Falloff for stars
+        const theta = Math.random() * 2 * Math.PI; // Random angle in xz-plane
+        const phi = Math.acos((Math.random() * 2) - 1); // Random angle for vertical distribution
+
+        /* Converts spherical coordinates to Cartesian for elliptical scaling */
+        const x = radius * r * Math.sin(phi) * Math.cos(theta);
+        const y = 0.15 * r * Math.cos(phi); // The 0.5 here makes the disk more flat
+        const z = radius * r * Math.sin(phi) * Math.sin(theta);
+
+        /* Store the orbits (these are used to update the particle positions in script.js) */
+        particleInfo.ellipticalOrbits.push({
+            a: Math.abs(x / Math.cos(theta)),
+            b: Math.abs(z / Math.sin(theta)),
+            theta: theta,
+        });
+
+        /* Mixed color effect */
+        const mixedColor = insideColor.clone();
+        mixedColor.lerp(outsideColor, r);
+
+        /* Specify x, y, and z coordinates for each particle */
+        positionsArray[i * 3] = x;
+        positionsArray[i * 3 + 1] = y;
+        positionsArray[i * 3 + 2] = z;
+
+        /* Specify the colors for each particle */
+        colorArray[i * 3] = mixedColor.r;
+        colorArray[i * 3 + 1] = mixedColor.g;
+        colorArray[i * 3 + 2] = mixedColor.b;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positionsArray, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+
+    return [geometry, material];
+}
+
+export const generateQuasarBlackHole = (particleInfo) => {
+
+    /* Create black hole geometry and material */
+    const geometry = new THREE.SphereGeometry(0.2, 100, 100);
+    const material = new THREE.MeshBasicMaterial({color: 0x000000});
+
+    return [geometry, material];
+}
+
+export const generateQuasarBeams = (particleInfo) => {
+
+    /* Create beam geometry and material */
+    const geometry = new THREE.BufferGeometry();
+    const material = new THREE.PointsMaterial({
+        size: particleInfo.particleSize,
+        color: particleInfo.color,
+        vertexColors: true,
+    });
+
+    const count = 10000; // The number of particles in the beam
+    const positionsArray = new Float32Array(count * 3); // Stores the x, y, z coordinates for each particle
+    const colorArray = new Float32Array(count * 3); // Stores the colors for each particle
+    const insideColor = new THREE.Color('#ffffff');
+    const outsideColor = new THREE.Color('#ff8e7c');
+
+    /* Calculation for particle positions */
+    for (let i = 0; i < count; i++) {
+
+        /* Generate a random radius, height, and angle to create a point in the cylinder */
+        const radius = Math.random() * 0.05;
+        const theta = Math.random() * 2 * Math.PI;
+        let height = particleInfo.beamHeight * Math.random();
+
+        /* Calculate the x, y, and z coordinates of each particle */
+        let x = radius * Math.cos(theta);
+        let y = height;
+        let z = radius * Math.sin(theta);
+
+        /* Generates a direction for each particle (i.e. if it is shooting up or down) */
+        if (Math.random() >= 0.5) {
+            y *= -1;
+        }
+
+        /* Mixed color effect */
+        const mixedColor = insideColor.clone();
+        mixedColor.lerp(outsideColor, height / 2.5);
+
+        /* Update positionsArray and colorArray */
+        positionsArray[i * 3] = x;
+        positionsArray[i * 3 + 1] = y;
+        positionsArray[i * 3 + 2] = z;
+
+        colorArray[i * 3] = mixedColor.r;
+        colorArray[i * 3 + 1] = mixedColor.g;
+        colorArray[i * 3 + 2] = mixedColor.b;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positionsArray, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
     return [geometry, material];
 }

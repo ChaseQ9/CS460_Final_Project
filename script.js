@@ -1,7 +1,13 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
-import { generateEllipticalGalaxy, generateHeartbeatGalaxy, generateSpiralGalaxy } from './galaxy.js';
+import {
+    generateEllipticalGalaxy,
+    generateHeartbeatGalaxy, generateQuasarBeams,
+    generateQuasarBlackHole,
+    generateQuasarDisk,
+    generateSpiralGalaxy
+} from './galaxy.js';
 
 /* Global variables */
 let renderer, controls, scene, camera, deltaTime;
@@ -11,14 +17,17 @@ const clock = new THREE.Clock();
 
 /* Particle Parameters */
 const GALAXY_PARAMS = {
-    particleSpeed: 1,
-    color: '#ffffff',
-    particleSize: 0.005,
-    count: 50000,
-    branches: 3,
-    radius: 5,
-    galaxy: 1,
-    ellipticalOrbits: [],
+    particleSpeed: 1, // The speed of the particles
+    color: '#ffffff', // The particle color
+    particleSize: 0.005, // The size of each particle
+    count: 50000, // Number of particles
+    branches: 3, // The number of spiral galaxy branches
+    radius: 5, // The galaxy radius
+    galaxy: 1, // The galaxy type
+    semiMajor: 5, // The semi-major axis for the elliptical galaxy
+    semiMinor: 3, // The semi-minor axis for the elliptical galaxy
+    ellipticalOrbits: [], // The orbital paths for each particle in the elliptical galaxy
+    beamHeight: 1.5, // The beam heights for the quasar
 }
 
 /* Three.js code */
@@ -35,7 +44,7 @@ document.body.appendChild(renderer.domElement);
 
 /* Skybox Implementation */
 const skyboxGeometry = new THREE.SphereGeometry(500, 500, 500);
-const skyboxTexture = new THREE.TextureLoader().load('./assets/yale8.jpg'); // NASA Credit for Image: https://svs.gsfc.nasa.gov/4851
+const skyboxTexture = new THREE.TextureLoader().load('./assets/yale8.jpg');
 const skyboxMaterial = new THREE.MeshBasicMaterial({map: skyboxTexture, side: THREE.BackSide, depthWrite: false});
 const skyboxMesh = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 skyboxMesh.renderOrder = -1; // Load skybox first to prevent the particles from disappearing
@@ -67,6 +76,7 @@ let flip = false;
 function animate() {
     deltaTime = clock.getDelta();
 
+    /* This enforces a constant refresh rate across all devices */
     setTimeout(function() {
         requestAnimationFrame(animate);
     }, 1000/60);
@@ -86,7 +96,7 @@ function animate() {
         case 1: // If the current galaxy is elliptical
             updateEllipticalGalaxy(deltaTime);
             break;
-        case 2: // If the current galaxy is irregular
+        case 2: // If the current galaxy is heartbeat
             const delta = clock.getDelta();
             elapsedTime += delta;
             if (elapsedTime >= .1) {
@@ -101,14 +111,17 @@ function animate() {
                 phase = 0;
             }
             updateHeartbeatGalaxy(phase);
-            
+            break;
+        case 3: // If the current galaxy is a quasar
+            updateEllipticalGalaxy(deltaTime);
+            updateQuasarBeams();
             break;
     }
 }
 
-// let particles = generateSpiralGalaxy(GALAXY_PARAMS);
 let particles = generateEllipticalGalaxy(GALAXY_PARAMS);
-// let particles = generateIrregularGalaxy(GALAXY_PARAMS);
+let blackHole, blackHoleMesh;
+let quasarBeams, quasarBeamMesh;
 
 let particleMesh = new THREE.Points(particles[0], particles[1]);
 scene.add(particleMesh);
@@ -130,6 +143,25 @@ function changeGalaxy() {
         particles = generateHeartbeatGalaxy(GALAXY_PARAMS);
         particleMesh = new THREE.Points(particles[0], particles[1]);
         scene.add(particleMesh);
+    } else if (GALAXY_PARAMS.galaxy === 3) {
+        scene.remove(blackHoleMesh);
+        scene.remove(quasarBeamMesh);
+        particleMesh.removeFromParent();
+        particles = generateQuasarDisk(GALAXY_PARAMS);
+        particleMesh = new THREE.Points(particles[0], particles[1]);
+        scene.add(particleMesh);
+        blackHole = generateQuasarBlackHole(GALAXY_PARAMS);
+        blackHoleMesh = new THREE.Mesh(blackHole[0], blackHole[1]);
+        scene.add(blackHoleMesh);
+        quasarBeams = generateQuasarBeams(GALAXY_PARAMS);
+        quasarBeamMesh = new THREE.Points(quasarBeams[0], quasarBeams[1]);
+        scene.add(quasarBeamMesh);
+    }
+
+    /* Remove the black hole and beams */
+    if (GALAXY_PARAMS.galaxy !== 3) {
+        scene.remove(blackHoleMesh);
+        scene.remove(quasarBeamMesh);
     }
 }
 
@@ -194,9 +226,7 @@ function updateEllipticalGalaxy(deltaTime) {
         posArray[i * 3 + 2] = z;
     }
     particles[0].attributes.position.needsUpdate = true;
-    
 }
-
 
 function updateHeartbeatGalaxy(phase) {
     mouse3D.x = 0.1;
@@ -212,6 +242,32 @@ function updateHeartbeatGalaxy(phase) {
         blackholeEffect();
     }
 }
+
+/* This function updates the beams leaving the quasar */
+function updateQuasarBeams() {
+    const posArray = quasarBeams[0].attributes.position.array; // Access the internal positionArray
+
+    /* Update particle positions */
+    for (let i = 0; i < posArray.length; i += 3) {
+        /* Decrement the particle height if it's negative and check reset its position to 0 if at minimum height */
+        if (posArray[i + 1] <= 0) {
+            posArray[i + 1] -= Math.random() * 0.004 * (GALAXY_PARAMS.beamHeight + posArray[i + 1]) + 0.001;
+            if (posArray[i + 1] <= -GALAXY_PARAMS.beamHeight) {
+                posArray[i + 1] = 0 - (Math.random() * 0.004);
+            }
+        }
+        /* Increment the particle height if it's positive and check reset its position to 0.001 if at max height */
+        else if (posArray[i + 1] > 0) {
+            posArray[i + 1] += Math.random() * 0.004 * (GALAXY_PARAMS.beamHeight - posArray[i + 1]) + 0.001;
+            if (posArray[i + 1] >= GALAXY_PARAMS.beamHeight) {
+                posArray[i + 1] = Math.random() * 0.004;
+            }
+        }
+    }
+    quasarBeams[0].attributes.position.needsUpdate = true;
+}
+
+
 /* ---------------- End of Particle Rotation Updates Implementation---------------- */
 
 /* ---------------- Beginning of Particle Effects Implementation ---------------- */
@@ -289,12 +345,31 @@ const pane = new Tweakpane.Pane();
 
 /* Galaxy Folder */
 const galaxyFolder = pane.addFolder({
-    title: 'Galaxy',
+    title: 'General Galaxy Settings',
     expanded: false,
 });
 
-/* Update particle speed upon user change */
-galaxyFolder.addInput(GALAXY_PARAMS, 'particleSpeed', {min: -3, max: 3, step: 0.1}).on('change', (event) => {
+/* Change the Galaxy to the one the user requests */
+galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
+    options: {
+        Spiral: 0,
+        Elliptical: 1,
+        Heartbeat: 2,
+        Quasar: 3,
+    }
+}).on('change', (event) => {
+    GALAXY_PARAMS.galaxy = event.value;
+    changeGalaxy();
+});
+
+/* The number of particles */
+galaxyFolder.addInput(GALAXY_PARAMS, 'count', {min: 1000, max: 1000000, step: 1000}).on('change', (event) => {
+    GALAXY_PARAMS.count = event.value;
+    changeGalaxy();
+});
+
+/* The speed of the galaxy's rotation */
+galaxyFolder.addInput(GALAXY_PARAMS, 'particleSpeed', {min: -5, max: 5, step: 0.1}).on('change', (event) => {
     GALAXY_PARAMS.particleSpeed = event.value;
 });
 
@@ -305,26 +380,67 @@ galaxyFolder.addInput(GALAXY_PARAMS, 'color').on('change', (event) => {
     particles[1].needsUpdate = true;
 });
 
-/* Update non-sphere particle size upon user request */
+/* Update particle size upon user request */
 galaxyFolder.addInput(GALAXY_PARAMS, 'particleSize', {min: 0.001, max: 0.05, step: 0.001}).on('change', (event) => {
-   GALAXY_PARAMS.particleSize = event.value;
-   particles[1].size = event.value;
-   particles[1].needsUpdate = true;
+    GALAXY_PARAMS.particleSize = event.value;
+    particles[1].size = event.value;
+    quasarBeams[1].size = event.value;
+    particles[1].needsUpdate = true;
+    quasarBeams[1].needsUpdate = true;
 });
 
-galaxyFolder.addInput(GALAXY_PARAMS, 'count', {min: 1000, max: 1000000, step: 1000}).on('change', (event) => {
-    GALAXY_PARAMS.count = event.value;
-    changeGalaxy();
- });
+/* Spiral Galaxy Folder */
+const spiralFolder = pane.addFolder({
+   title: 'Spiral Galaxy Specifics',
+   expanded: false,
+});
 
-galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
-    options: {
-        Spiral: 0,
-        Elliptical: 1,
-        Heartbeat: 2,
-    }
-}).on('change', (event) => {
-    GALAXY_PARAMS.galaxy = event.value;
+/* The number of spirals */
+spiralFolder.addInput(GALAXY_PARAMS, 'branches', {min: 2, max: 10, step: 1}).on('change', (event) => {
+    GALAXY_PARAMS.branches = event.value;
+    changeGalaxy();
+});
+
+/* The spiral galaxy radius */
+spiralFolder.addInput(GALAXY_PARAMS, 'radius', {min: 2, max: 10, step: 1}).on('change', (event) => {
+    GALAXY_PARAMS.radius = event.value;
+    changeGalaxy();
+});
+
+/* Elliptical Galaxy Folder */
+const ellipticalFolder = pane.addFolder({
+    title: 'Elliptical Galaxy Specifics',
+    expanded: false,
+});
+
+/* Adjust the semi-major axis for the elliptical galaxy */
+ellipticalFolder.addInput(GALAXY_PARAMS, 'semiMajor', {min: 2, max: 10, step: 1}).on('change', (event) => {
+    GALAXY_PARAMS.semiMajor = event.value;
+    changeGalaxy();
+});
+
+/* Adjust the semi-minor axis for the elliptical galaxy */
+ellipticalFolder.addInput(GALAXY_PARAMS, 'semiMinor', {min: 2, max: 10, step: 1}).on('change', (event) => {
+    GALAXY_PARAMS.semiMinor = event.value;
+    changeGalaxy();
+});
+
+/* Heartbeat Galaxy Folder */
+const heartbeatFolder = pane.addFolder({
+    title: 'Heartbeat Galaxy Specifics',
+    expanded: false,
+});
+
+/* Add any Heartbeat galaxy settings here */
+
+/* Quasar Folder */
+const quasarFolder = pane.addFolder({
+    title: 'Quasar Specifics',
+    expanded: false,
+});
+
+quasarFolder.addInput(GALAXY_PARAMS, 'beamHeight', {min: 0.5, max: 3, step: 0.1}).on('change', (event) => {
+    GALAXY_PARAMS.beamHeight = event.value;
     changeGalaxy();
 });
 
