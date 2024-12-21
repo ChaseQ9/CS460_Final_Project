@@ -1,6 +1,0 @@
-Things I have changed - 11/27 -> Chase 
-> Added a galaxy.js file to seperate the particle creation process
-> Added this file to keep track of things that have been updated
-> Updated the tweakpane implemenation to use the changes I made in galaxy.js
-> Added functionality to create a spiral Galaxy (off a tutorial)
-> Added functionality to create an ellipticial Galaxy (not great)
