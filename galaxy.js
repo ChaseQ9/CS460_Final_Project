@@ -215,11 +215,12 @@ export const generateQuasarBeams = (particleInfo) => {
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.PointsMaterial({
         size: particleInfo.particleSize,
-        color: particleInfo.color,
+        color: new THREE.Color('#3467eb'),
         vertexColors: true,
+        blending: THREE.AdditiveBlending,
     });
 
-    const count = 10000; // The number of particles in the beam
+    const count = 500000; // The number of particles in the beam
     const positionsArray = new Float32Array(count * 3); // Stores the x, y, z coordinates for each particle
     const colorArray = new Float32Array(count * 3); // Stores the colors for each particle
     const insideColor = new THREE.Color('#ffffff');
@@ -227,16 +228,19 @@ export const generateQuasarBeams = (particleInfo) => {
 
     /* Calculation for particle positions */
     for (let i = 0; i < count; i++) {
-
-        /* Generate a random radius, height, and angle to create a point in the cylinder */
-        const radius = Math.random() * 0.05;
-        const theta = Math.random() * 2 * Math.PI;
         let height = particleInfo.beamHeight * Math.random();
+        // ChatGPT helped here to implement an aggresive scaling technique in order to spread the particles out the higher they get 
+        const spacingFactor = 1 + Math.pow(height/particleInfo.beamHeight, 20);
+        /* Generate a random radius, height, and angle to create a point in the cylinder */
+        const radius = Math.random() * 0.05 *  spacingFactor;
+        const theta = Math.random() * 2 * Math.PI;
 
         /* Calculate the x, y, and z coordinates of each particle */
-        let x = radius * Math.cos(theta);
-        let y = height;
-        let z = radius * Math.sin(theta);
+        let x = radius * Math.cos(theta) * spacingFactor;
+        let y = height - Math.random() + 0.3;
+        let z = radius * Math.sin(theta) * Math.random() * spacingFactor;
+
+        
 
         /* Generates a direction for each particle (i.e. if it is shooting up or down) */
         if (Math.random() >= 0.5) {
@@ -245,12 +249,16 @@ export const generateQuasarBeams = (particleInfo) => {
 
         /* Mixed color effect */
         const mixedColor = insideColor.clone();
-        mixedColor.lerp(outsideColor, height / 2.5);
+        mixedColor.lerp(outsideColor, height / 1.5);
+
+        
 
         /* Update positionsArray and colorArray */
+
+        
         positionsArray[i * 3] = x;
         positionsArray[i * 3 + 1] = y;
-        positionsArray[i * 3 + 2] = z;
+        positionsArray[i * 3 + 2] = z * Math.PI / 2;
 
         colorArray[i * 3] = mixedColor.r;
         colorArray[i * 3 + 1] = mixedColor.g;

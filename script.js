@@ -113,6 +113,7 @@ function animate() {
             updateHeartbeatGalaxy(phase);
             break;
         case 3: // If the current galaxy is a quasar
+            GALAXY_PARAMS.particleSpeed = 50.0;
             updateEllipticalGalaxy(deltaTime);
             updateQuasarBeams();
             break;
@@ -355,7 +356,7 @@ galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
         Spiral: 0,
         Elliptical: 1,
         Heartbeat: 2,
-        Quasar: 3,
+        "Quasar(Speed Locked)": 3,
     }
 }).on('change', (event) => {
     GALAXY_PARAMS.galaxy = event.value;
