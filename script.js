@@ -359,7 +359,7 @@ const galaxyFolder = pane.addFolder({
 /* Change the Galaxy to the one the user requests */
 galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
     options: {
-        Spiral: 0,
+        "Spiral (Tutorial)": 0,
         Elliptical: 1,
         Heartbeat: 2,
         "Quasar(Speed Locked)": 3,
@@ -431,14 +431,6 @@ ellipticalFolder.addInput(GALAXY_PARAMS, 'semiMinor', {min: 2, max: 10, step: 1}
     GALAXY_PARAMS.semiMinor = event.value;
     changeGalaxy();
 });
-
-/* Heartbeat Galaxy Folder */
-const heartbeatFolder = pane.addFolder({
-    title: 'Heartbeat Galaxy Specifics',
-    expanded: false,
-});
-
-/* Add any Heartbeat galaxy settings here */
 
 /* Quasar Folder */
 const quasarFolder = pane.addFolder({
