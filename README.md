@@ -78,7 +78,7 @@ We applied knowledge from the CS460 lecture slides. Examples include
 References to stack overflow for specific three.js implementations practices or best practices overall were referred to occasionally. 
 * To limit the framerate to be consistent across all screens, we referred to the following Stack Overflow submission: https://stackoverflow.com/questions/11285065/limiting-framerate-in-three-js-to-increase-performance-requestanimationframe
 
-### Nasa 
+### NASA
 The skybox used in this project was sourced from NASA at the following link: https://nasa3d.arc.nasa.gov/detail/yale8
 
 ### Other Sources
