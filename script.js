@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
-import { generateEllipticalGalaxy, generateIrregularGalaxy, generateSpiralGalaxy } from './galaxy.js';
+import { generateEllipticalGalaxy, generateHeartbeatGalaxy, generateSpiralGalaxy } from './galaxy.js';
 
 /* Global variables */
 let renderer, controls, scene, camera, deltaTime;
@@ -35,7 +35,7 @@ document.body.appendChild(renderer.domElement);
 
 /* Skybox Implementation */
 const skyboxGeometry = new THREE.SphereGeometry(500, 500, 500);
-const skyboxTexture = new THREE.TextureLoader().load('./assets/skybox.jpg'); // NASA Credit for Image: https://svs.gsfc.nasa.gov/4851
+const skyboxTexture = new THREE.TextureLoader().load('./assets/yale8.jpg'); // NASA Credit for Image: https://svs.gsfc.nasa.gov/4851
 const skyboxMaterial = new THREE.MeshBasicMaterial({map: skyboxTexture, side: THREE.BackSide, depthWrite: false});
 const skyboxMesh = new THREE.Mesh(skyboxGeometry, skyboxMaterial);
 skyboxMesh.renderOrder = -1; // Load skybox first to prevent the particles from disappearing
@@ -60,10 +60,16 @@ const invsplaneQuaternion = new THREE.Quaternion(Math.sin((-Math.PI / 2) / 2), 0
 invsplane.quaternion.copy(invsplaneQuaternion);
 
 /* Call animation/rendering loop */
+let elapsedTime = 0;
+let phase = 0;
+let flip = false;
+
 function animate() {
     deltaTime = clock.getDelta();
 
-    requestAnimationFrame(animate);
+    setTimeout(function() {
+        requestAnimationFrame(animate);
+    }, 1000/60);
 
     controls.update();
     renderer.render(scene, camera);
@@ -81,7 +87,21 @@ function animate() {
             updateEllipticalGalaxy(deltaTime);
             break;
         case 2: // If the current galaxy is irregular
-            // updateIrregularGalaxy();
+            const delta = clock.getDelta();
+            elapsedTime += delta;
+            if (elapsedTime >= .1) {
+                flip = !flip;
+                elapsedTime = 0;
+            } 
+            if (flip) {
+                console.log("flipped on");
+                phase = 1;
+            } else {
+                console.log("flipped off");
+                phase = 0;
+            }
+            updateHeartbeatGalaxy(phase);
+            
             break;
     }
 }
@@ -107,7 +127,7 @@ function changeGalaxy() {
         scene.add(particleMesh);
     } else if (GALAXY_PARAMS.galaxy === 2) {
         particleMesh.removeFromParent();
-        particles = generateIrregularGalaxy(GALAXY_PARAMS);
+        particles = generateHeartbeatGalaxy(GALAXY_PARAMS);
         particleMesh = new THREE.Points(particles[0], particles[1]);
         scene.add(particleMesh);
     }
@@ -174,8 +194,24 @@ function updateEllipticalGalaxy(deltaTime) {
         posArray[i * 3 + 2] = z;
     }
     particles[0].attributes.position.needsUpdate = true;
+    
 }
 
+
+function updateHeartbeatGalaxy(phase) {
+    mouse3D.x = 0.1;
+    mouse3D.y = 0.1;
+    mouse3D.z = 0.1;
+    if (phase == 0) {
+        eKey = true;
+        fKey = false;
+        repulsionEffect();
+    } else {
+        eKey = false;
+        fKey = true;
+        blackholeEffect();
+    }
+}
 /* ---------------- End of Particle Rotation Updates Implementation---------------- */
 
 /* ---------------- Beginning of Particle Effects Implementation ---------------- */
@@ -217,7 +253,6 @@ function repulsionEffect() {
 function blackholeEffect() {
     if (fKey && !eKey) { // Do the blackholeEffect if only the 'f' key is being held
         const posArray = particles[0].attributes.position.array; // Access the internal positionArray
-
         /* Effect parameters */
         var scaleEffect = 0.1 // This specifies how fast the particles will be effected
         var threshold = 2; // This specifies the distance for particles to be targeted by the effect
@@ -286,7 +321,7 @@ galaxyFolder.addInput(GALAXY_PARAMS, 'galaxy', {
     options: {
         Spiral: 0,
         Elliptical: 1,
-        Irregular: 2,
+        Heartbeat: 2,
     }
 }).on('change', (event) => {
     GALAXY_PARAMS.galaxy = event.value;

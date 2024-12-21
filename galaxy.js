@@ -10,7 +10,6 @@ export const generateSpiralGalaxy = (particleInfo, centerX=0, centerZ=0) => {
 
     // NOTE -> The calculation of the branches of the galaxy and a lot of the math is borrowed from 
     // https://github.com/PineappleBeer/threejs-journey/tree/master/18-galaxy-generator
-    // NOT DONE
     const geometry = new THREE.BufferGeometry(); // Create the buffer geometry for the position
     const material = new THREE.PointsMaterial({ // Set the material and all its flags
         size: particleInfo.particleSize,
@@ -121,26 +120,19 @@ export const generateEllipticalGalaxy = (particleInfo, centerX=0, centerZ=0) => 
     return [geometry, material];
 }
 
-export const generateIrregularGalaxy = (particleInfo) => {
-    /* Create galaxy geometry and material */
+export const generateHeartbeatGalaxy = (particleInfo) => {
     const geometry = new THREE.BufferGeometry();
     const material = new THREE.PointsMaterial({
         size: particleInfo.particleSize,
-        color: particleInfo.color, 
-    });
-
-    const count = particleInfo.count;
-    const posArray = new Float32Array(count * 3);
-
-    for (let i = 0; i < count; i++) {
-        let i3 = i * 3;
-        posArray[i3] = Math.random();
-        posArray[i3 + 1] = Math.random();
-        posArray[i3 + 2] = Math.random();
+        color: particleInfo.color,
+    })
+    const posArray = new Float32Array(particleInfo.count * 3);
+    for (let i = 0; i < posArray.length; i++) {
+        posArray[i] = Math.random() - 0.5;
+        posArray[i + 1] = Math.random() - 0.5;
+        posArray[i + 2] = Math.random() - 0.5;
     }
-
     geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    console.log("Added soon");
-
+    
     return [geometry, material];
 }
