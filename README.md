@@ -79,8 +79,7 @@ References to stack overflow for specific three.js implementations practices or 
 * To limit the framerate to be consistent across all screens, we referred to the following Stack Overflow submission: https://stackoverflow.com/questions/11285065/limiting-framerate-in-three-js-to-increase-performance-requestanimationframe
 
 ### Nasa 
-https://nasa3d.arc.nasa.gov/images
-The above link was referenced in finding a background image (a skybox texture). 
+The skybox used in this project was sourced from NASA at the following link: https://nasa3d.arc.nasa.gov/detail/yale8
 
 ### Other Sources
 If any references were missing from above, they are indicated through comments in the source code itself.
