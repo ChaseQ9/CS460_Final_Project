@@ -229,7 +229,7 @@ export const generateQuasarBeams = (particleInfo) => {
     /* Calculation for particle positions */
     for (let i = 0; i < count; i++) {
         let height = particleInfo.beamHeight * Math.random();
-        // ChatGPT helped here to implement an aggresive scaling technique in order to spread the particles out the higher they get 
+        // ChatGPT helped here to implement an aggressive scaling technique in order to spread the particles out the higher they get
         const spacingFactor = 1 + Math.pow(height/particleInfo.beamHeight, 20);
         /* Generate a random radius, height, and angle to create a point in the cylinder */
         const radius = Math.random() * 0.05 *  spacingFactor;
@@ -240,8 +240,6 @@ export const generateQuasarBeams = (particleInfo) => {
         let y = height - Math.random() + 0.3;
         let z = radius * Math.sin(theta) * Math.random() * spacingFactor;
 
-        
-
         /* Generates a direction for each particle (i.e. if it is shooting up or down) */
         if (Math.random() >= 0.5) {
             y *= -1;
@@ -251,11 +249,7 @@ export const generateQuasarBeams = (particleInfo) => {
         const mixedColor = insideColor.clone();
         mixedColor.lerp(outsideColor, height / 1.5);
 
-        
-
         /* Update positionsArray and colorArray */
-
-        
         positionsArray[i * 3] = x;
         positionsArray[i * 3 + 1] = y;
         positionsArray[i * 3 + 2] = z * Math.PI / 2;
