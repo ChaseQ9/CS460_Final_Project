@@ -127,7 +127,7 @@ let quasarBeams, quasarBeamMesh;
 let particleMesh = new THREE.Points(particles[0], particles[1]);
 scene.add(particleMesh);
 
-/* This function will generate a different galaxy type specified by the user */
+/* This function will generate a different galaxy type specified by the user  */
 function changeGalaxy() {
     /* Remove the black hole and beams */
 
