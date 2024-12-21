@@ -11,7 +11,7 @@ This simulator doesn't require any complex installation. All that is required is
 * https://lykos3d.github.io/CS460_Final_Project/
 
 ## How to - Guide
-Upon loading the page, the default elliptical galaxy and parameters will be set. These parameters are able to be configured in the TweakPane menu at the top right of the screen. There are five
+Upon loading the page, the default elliptical galaxy and parameters will be set. These parameters are able to be configured in the TweakPane menu at the top right of the screen. There are four
 different folders:
 * General Galaxy Settings: These settings will mostly apply to all particles, regardless of galaxy time. They include:
   * Galaxy type: This menu allows you to select between the different types of galaxies: Spiral, Elliptical, Heartbeat, and Quasar. 
@@ -31,13 +31,13 @@ different folders:
 ## Visuals 
 
 ### Elliptical Galaxy
-![elliptical galaxy] (./assets/Elliptical.png)
+![elliptical galaxy](./assets/Elliptical.png)
 
 ### Spiral Galaxy
-![spiral galaxy] (./assets/Spiral.png)
+![spiral galaxy](./assets/Spiral.png)
 
 ### Quasar
-![quasar] (./assets/Quasar.png)
+![quasar](./assets/Quasar.png)
 
 ## Challenges 
 * Creating the specific shapes, such as our elliptical galaxy
