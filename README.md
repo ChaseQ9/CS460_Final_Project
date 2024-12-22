@@ -1,4 +1,4 @@
-# Particulum - CS460_Final_Project
+# Particulum - A Particle Simulator
 ## By Chase Quigley and Liam Willis
 
 ## Description
