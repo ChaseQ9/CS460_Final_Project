@@ -50,6 +50,11 @@ We encountered many challenges when making this project
 * The invisible plane also gave us some issues. For example, we were having issues with the raycasting effect, which was giving some inconsistent effects and causing the black hole and repulsion effects to target the wrong location. We fixed this by aligning the invisible plane to be in the same plane as the galaxies, creating the targeted behavior.
 * The lagging effect: one of the features we implemented was the lagging effect, which makes it so that particles further from the galactic center move slightly slower than those near the center, creating an interesting visualization. However, this required us to refactor the code such that each particle's position is directly changed after each frame, rather than just rotating the entire mesh with a quaternion. This was very laborious and required quite a lot of mathematics, from applying a rotation matrix for each particle in the case of the spiral galaxy to using parametric equations and the semi-minor and major axes to update the particles for the elliptical galaxy.
 
+## Future Improvements
+One of the main things that we would want to focus on in the future would be to improve the quality of the quasar beams. Right now, they are simply two cylinders that come out from above and 
+below the black hole, and all the particles disappear at exactly the same spot, which looks quite jarring. In the future, we hope to make this more natural by having the particles not all 
+disappear at the same height. Moreover, we would like to change the beams to be slightly more cone-like rather than cylindrical to look more natural.
+
 ## Acknowledgements and References 
 
 ### GitHub Tutorial
