@@ -68,7 +68,7 @@ ChatGPT was used in various spots in our project to help with mathematics or deb
 * The repulsionEffect was created with the help of ChatGPT, and the blackHoleEffect is a modification of this function.
 * If not mentioned here, any other uses of ChatGPT are indicated in the code.
 
-## Mathematical Equations
+### Mathematical Equations
 We sourced some of the mathematics from these sources.
 * Rotation Matrix: https://en.wikipedia.org/wiki/Rotation_matrix
 * Ellipse parametric equations: https://www.mathopenref.com/coordparamellipse.html
